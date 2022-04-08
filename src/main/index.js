@@ -1,7 +1,11 @@
-import { app, BrowserWindow, Menu } from 'electron'
+import { app, BrowserWindow, Menu,Notification } from 'electron'
 import pkg from '../../package.json'
+import source from '../../videoSource.json'
 
 require('@electron/remote/main').initialize()
+
+const platform = source.platform
+const crackSource = source.crackSource
 
 // set app name
 app.name = pkg.productName
@@ -55,12 +59,14 @@ function createWindow() {
     height: 540,
     minWidth: 960,
     minHeight: 540,
-    // useContentSize: true,
+    useContentSize: true,
+    skipTaskbarboolean:true,
     webPreferences: {
       nodeIntegration: true,
       nodeIntegrationInWorker: false,
       contextIsolation: false,
       webSecurity: false,
+      webviewTag: true,
     },
     show: false,
   })
@@ -86,6 +92,7 @@ function createWindow() {
   })
 
   mainWindow.on('closed', () => {
+    app.exit(0);
     console.log('\nApplication exiting...')
   })
 }
@@ -139,48 +146,133 @@ const sendMenuEvent = async (data) => {
   mainWindow.webContents.send('change-view', data)
 }
 
-const template = [
-  {
-    label: app.name,
-    submenu: [
-      {
-        label: 'Home',
-        accelerator: 'CommandOrControl+H',
-        click() {
-          sendMenuEvent({ route: '/' })
-        },
-      },
-      { type: 'separator' },
-      { role: 'minimize' },
-      { role: 'togglefullscreen' },
-      { type: 'separator' },
-      { role: 'quit', accelerator: 'Alt+F4' },
-    ],
-  },
-  {
-    role: 'help',
-    submenu: [
-      {
-        label: 'Get Help',
-        role: 'help',
-        accelerator: 'F1',
-        click() {
-          sendMenuEvent({ route: '/help' })
-        },
-      },
-      {
-        label: 'About',
-        role: 'about',
-        accelerator: 'CommandOrControl+A',
-        click() {
-          sendMenuEvent({ route: '/about' })
-        },
-      },
-    ],
-  },
-]
+// let win_list = [];//存储打开的窗口
+// //主进程监听创建窗口事件
+// ipcMain.on('createWindow',function(event, infor) {
+//   const currentWindow = BrowserWindow.getFocusedWindow();　//获取当前活动的浏览器窗口。
+//   if(currentWindow) { //如果上一步中有活动窗口，则根据当前活动窗口的右下方设置下一个窗口的坐标
+//     const [ currentWindowX, currentWindowY ] = currentWindow.getPosition();
+//     let x = currentWindowX + 20;
+//   }
+//   let oldWin = null;
+//   for (const item of win_list) { //判断要创建的窗口是否已经打开，如果已经打开取出窗口
+//     if(item.url === infor.url){
+//       oldWin = item.mwin;
+//       break;
+//     }
+//   }
+//
+//   if(oldWin){ //窗口存在直接打开
+//     oldWin.show();
+//   }else{ //否则创建新窗口
+//     Menu.setApplicationMenu(null)
+//     let newwin = new BrowserWindow({
+//       x,
+//       titleBarStyle: 'hidden',
+//       minWidth:1024,
+//       minHeight:768,
+//       // parent: win, //win是主窗口
+//     })
+//     // newwin.webContents.openDevTools();
+//     if(infor.type === 1){
+//       newwin.loadURL(path.join('file:',__dirname,infor.url));
+//     }else{
+//       newwin.loadURL(infor.url);
+//     }
+//     newwin.on('closed',()=>{ //窗口关闭。删除win_list存储的数据
+//       for (let [index, item] of win_list.entries()) {
+//         if(item.mwin == newwin){
+//           win_list.splice(index, 1);
+//           newwin = null;
+//           break;
+//         }
+//
+//       }
+//     });
+//     win_list.push({url:infor.url,mwin:newwin});
+//   }
+// })
+
 
 function setMenu() {
+  const template = [
+    {
+      label: '视频平台',
+      submenu: [
+      ],
+    },
+    {
+      label: '破解源',
+      submenu: [
+      ],
+    },
+    {
+      label: "帮助",
+      submenu: [
+        {
+          label:"使用说明",
+          click(){
+            const currentWindow = BrowserWindow.getFocusedWindow();　//获取当前活动的浏览器窗口。
+            // load root file/url
+            if (isDev) {
+              currentWindow.loadURL('http://localhost:9080')
+            } else {
+              currentWindow.loadFile(`${__dirname}/index.html`)
+
+              global.__static = require('path')
+                .join(__dirname, '/static')
+                .replace(/\\/g, '\\\\')
+            }
+          }
+        }
+      ],
+    }
+  ]
+  for (const key in platform) {
+    const item = platform[key]
+    const menuItem = {
+      label: item.name,
+      click() {
+        const allWindows =  BrowserWindow.getAllWindows();
+        for (const win of allWindows) {
+          if(win !== mainWindow){
+            win.close();
+          }
+        }
+        mainWindow.loadURL(item.url).then(r => {
+          console.log(r);
+        }).catch(e => {
+          console.log(e);
+        });
+      },
+    }
+    template[0].submenu.push(menuItem)
+  }
+  for (const key in crackSource) {
+    const item = crackSource[key]
+    const menuItem = {
+      label: item.name,
+      click() {
+        // 参数参考Notification文档
+        const currentWindow = BrowserWindow.getFocusedWindow();　//获取当前活动的浏览器窗口。
+        let currentUrl = currentWindow.webContents.getURL();
+        console.log(currentUrl);
+        if ((currentUrl.indexOf("?jx=") !== -1) || (currentUrl.indexOf("?url=") !== -1)){
+           currentUrl = currentUrl.substring(currentUrl.indexOf("=")+1)
+        }
+        console.log(item.url + currentUrl);
+        currentWindow.loadURL(item.url + currentUrl);
+        const options = {
+          title: "破解源",
+          body: item.name
+        };
+        const myNotification = new Notification(options);
+        myNotification.show();
+      },
+    }
+    template[1].submenu.push(menuItem)
+  }
+
   if (process.platform === 'darwin') {
     template.unshift({
       label: app.name,
@@ -196,18 +288,10 @@ function setMenu() {
         { role: 'quit' },
       ],
     })
-
-    template.push({
-      role: 'window',
-    })
-
-    template.push({
-      role: 'help',
-    })
-
-    template.push({ role: 'services' })
   }
+
 
   const menu = Menu.buildFromTemplate(template)
   Menu.setApplicationMenu(menu)
 }
+

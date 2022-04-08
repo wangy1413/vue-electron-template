@@ -1,11 +1,12 @@
 {
-  "author": "Muhammad Ubaid Raza <mubaidr@gmail.com>",
+  "author": "yige001 <1580229949@qq.com>",
   "bugs": {
     "url": "https://github.com/mubaidr/vue-electron-template/issues"
   },
   "dependencies": {
     "@electron/remote": "^1.1.0",
     "bulma-fluent": "^0.4.3",
+    "element-ui": "^2.15.6",
     "material-design-icons": "^3.0.1",
     "vue": "^2.6.12",
     "vue-electron": "^1.0.6",
@@ -69,8 +70,9 @@
   "license": "MIT",
   "main": "./dist/main.js",
   "name": "vue-electron-template",
+  "version": "1.0.1",
   "private": true,
-  "productName": "Vue Electron Template",
+  "productName": "VIP Video Player",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mubaidr/vue-electron-template.git"
@@ -100,6 +102,5 @@
     "release": "run-s test build",
     "test": "run-s rebuild:node pack:workers jest",
     "test:watch": "run-s rebuild:node pack:workers jest:watch"
-  },
-  "version": "0.0.1"
+  }
 }

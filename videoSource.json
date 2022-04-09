@@ -9,10 +9,6 @@
       "url": "https://v.qq.com/"
     },
     {
-      "name": "芒果",
-      "url": "https://www.mgtv.com/"
-    },
-    {
       "name": "优酷",
       "url": "https://www.youku.com/"
     },
@@ -27,6 +23,10 @@
     {
       "name": "搜狐",
       "url": "https://www.sohu.com/"
+    },
+    {
+      "name": "爱奇艺",
+      "url": "https://m.iqiyi.com/"
     },
     {
       "name": "AcFun",
